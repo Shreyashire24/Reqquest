@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReqQuest — The Requirements Archaeology Adventure</title>
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #d4a017;
+  --gold-light: #f0c040;
+  --gold-dim: rgba(212,160,23,0.15);
+  --dark: #0a0800;
+  --darker: #050400;
+  --bg: #0d0a04;
+  --text: #f0e6cc;
+  --text-muted: #a08860;
+  --border: #2a1f08;
+  --success: #4dff7c;
+  --success-dim: rgba(77,255,124,0.1);
+  --error: #ff4d4d;
+  --error-dim: rgba(255,77,77,0.1);
+  --card-bg: rgba(14,10,3,0.97);
+  --glow: 0 0 40px rgba(212,160,23,0.2);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Rajdhani', sans-serif;
+  background-color: #0a0800;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(212,160,23,0.1) 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4a017' fill-opacity='0.025'%3E%3Cpath d='M40 40h-2v2h2v-2zm0-20h-2v2h2v-2zm20 20h-2v2h2v-2zm-40 0h-2v2h2v-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-attachment: fixed;
+  color: var(--text);
+  min-height: 100vh;
+}
+
+h1,h2,h3,h4 { font-family: 'Oxanium', sans-serif; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #0a0800; }
+::-webkit-scrollbar-thumb { background: #3a2a08; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; flex-direction: column; }
+
+.topbar {
+  background: rgba(5,4,1,0.96);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(212,160,23,0.1);
+  padding: 13px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 13px; position: sticky; top: 0; z-index: 50;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+}
+.topbar .logo {
+  font-size: 22px; font-weight: 800; color: var(--gold);
+  font-family: 'Oxanium', sans-serif; letter-spacing: 0.05em;
+  text-shadow: 0 0 20px rgba(212,160,23,0.4);
+}
+.topbar .logo span { color: #fff; }
+.topbar .meta { display: flex; gap: 20px; align-items: center; }
+.topbar-pill {
+  background: rgba(212,160,23,0.08); border: 1px solid rgba(212,160,23,0.18);
+  border-radius: 20px; padding: 5px 14px; font-size: 12px;
+  color: var(--text-muted); font-weight: 600;
+}
+.score-display {
+  color: var(--gold); font-weight: 700; font-size: 15px;
+  font-family: 'Oxanium', sans-serif; text-shadow: 0 0 10px rgba(212,160,23,0.3);
+}
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; padding: 14px 32px; border-radius: 12px; border: none;
+  font-family: 'Oxanium', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all 0.25s; letter-spacing: 0.04em;
+  position: relative; overflow: hidden;
+}
+.btn::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #b8860b 0%, #d4a017 50%, #f0c040 100%);
+  color: #1a1000;
+  box-shadow: 0 4px 20px rgba(212,160,23,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(212,160,23,0.55); }
+.btn-secondary {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(212,160,23,0.22);
+  color: var(--text);
+}
+.btn-secondary:hover { background: rgba(212,160,23,0.08); transform: translateY(-2px); }
+.btn-danger {
+  background: linear-gradient(135deg, #cc2222, #ff4444);
+  color: white; box-shadow: 0 4px 16px rgba(255,60,60,0.3);
+}
+.btn-danger:hover { transform: translateY(-2px); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+
+#screen-intro {
+  background:
+    radial-gradient(ellipse 100% 70% at 50% 0%, rgba(212,140,0,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(180,120,0,0.06) 0%, transparent 50%),
+    #070500;
+  background-attachment: fixed;
+  align-items: center; justify-content: center; padding: 60px 20px;
+}
+.intro-inner {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 100vh; padding: 60px 20px; text-align: center;
+}
+.intro-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(212,160,23,0.08); border: 1px solid rgba(212,160,23,0.28);
+  color: var(--gold-light); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  padding: 7px 20px; border-radius: 30px; margin-bottom: 36px;
+}
+.intro-badge::before {
+  content: ''; display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--gold);
+  box-shadow: 0 0 6px var(--gold); animation: blink 1.5s ease infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.intro-eyebrow {
+  font-size: 13px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--gold); opacity: 0.65; margin-bottom: 16px; font-weight: 600;
+}
+.intro-title {
+  font-size: clamp(52px, 10vw, 100px);
+  font-weight: 800; line-height: 0.9; margin-bottom: 8px; color: #fff;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 80px rgba(212,140,0,0.45), 0 0 160px rgba(180,100,0,0.2);
+}
+.intro-title span {
+  color: var(--gold);
+  text-shadow: 0 0 40px rgba(212,160,23,0.8), 0 0 80px rgba(180,120,0,0.4);
+}
+.intro-subtitle {
+  font-size: 14px; opacity: 0.45; margin-bottom: 48px;
+  letter-spacing: 0.18em; text-transform: uppercase; font-weight: 500;
+}
+.intro-divider {
+  width: 140px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 0 auto 48px; opacity: 0.4;
+}
+.story-box {
+  background: rgba(212,160,23,0.04); border: 1px solid rgba(212,160,23,0.14);
+  border-radius: 20px; padding: 30px 36px;
+  max-width: 680px; margin: 0 auto 44px; text-align: left;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03);
+  position: relative;
+}
+.story-box::before {
+  content: ''; position: absolute; top: 0; left: 24px; right: 24px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,160,23,0.4), transparent);
+}
+.npc-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+}
+.npc-avatar-sm {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, #b8860b, #f0c040);
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 14px;
+  box-shadow: 0 0 12px rgba(212,160,23,0.4);
+}
+.story-box p { font-size: 15px; line-height: 1.8; color: #ddc9a0; }
+.story-box strong { color: var(--gold-light); }
+.name-section { max-width: 420px; margin: 0 auto 32px; }
+.name-section label {
+  display: block; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 12px;
+  color: var(--text-muted);
+}
+.name-section input {
+  width: 100%; padding: 15px 22px; border-radius: 12px;
+  border: 1px solid rgba(212,160,23,0.25);
+  background: rgba(212,160,23,0.05);
+  color: white; font-size: 16px; font-family: 'Rajdhani', sans-serif;
+  outline: none; transition: all 0.25s;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
+}
+.name-section input::placeholder { color: rgba(255,255,255,0.2); }
+.name-section input:focus {
+  border-color: var(--gold); background: rgba(212,160,23,0.08);
+  box-shadow: 0 0 0 3px rgba(212,160,23,0.12), inset 0 2px 8px rgba(0,0,0,0.4);
+}
+.intro-hint { font-size: 12px; opacity: 0.3; margin-top: 20px; letter-spacing: 0.08em; }
+
+#screen-worlds { background: var(--bg); }
+.worlds-hero {
+  background: linear-gradient(180deg, rgba(212,160,23,0.06) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(212,160,23,0.1);
+  padding: 44px 48px 36px; position: relative; overflow: hidden;
+}
+.worlds-hero::before {
+  content: 'BUREAU OF LOST SPECIFICATIONS';
+  position: absolute; right: 40px; top: 50%; transform: translateY(-50%);
+  font-size: 60px; font-weight: 800; color: rgba(212,160,23,0.025);
+  font-family: 'Oxanium', sans-serif; letter-spacing: 0.1em; white-space: nowrap;
+  pointer-events: none;
+}
+.worlds-hero-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--gold); opacity: 0.7; margin-bottom: 10px;
+}
+.worlds-hero h2 {
+  font-size: 34px; margin-bottom: 10px;
+  background: linear-gradient(135deg, #fff 40%, var(--gold-light) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.worlds-hero p { opacity: 0.5; font-size: 14px; max-width: 560px; line-height: 1.6; }
+.worlds-hero-stats { display: flex; gap: 28px; margin-top: 20px; flex-wrap: wrap; }
+.hero-stat { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+.hero-stat strong { color: var(--gold-light); font-family: 'Oxanium', sans-serif; font-size: 14px; }
+.worlds-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 20px; padding: 36px 48px; max-width: 1300px;
+}
+.world-card {
+  background: var(--card-bg); border: 1px solid rgba(212,160,23,0.1);
+  border-radius: 20px; padding: 0;
+  cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+.world-card-top {
+  height: 3px; width: 100%;
+  background: linear-gradient(90deg, #b8860b, #f0c040, #b8860b);
+  opacity: 0.5; transition: opacity 0.3s;
+}
+.world-card:hover .world-card-top { opacity: 1; }
+.world-card-inner { padding: 28px 28px 20px; }
+.world-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(212,160,23,0.05) 0%, transparent 70%);
+  opacity: 0; transition: opacity 0.3s; pointer-events: none;
+}
+.world-card:hover {
+  border-color: rgba(212,160,23,0.4); transform: translateY(-8px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 32px rgba(212,140,23,0.12);
+}
+.world-card:hover::after { opacity: 1; }
+.world-card.completed { border-color: rgba(77,255,124,0.2); }
+.world-card.completed .world-card-top { background: linear-gradient(90deg, #1aff70, #4dff7c); }
+.world-num { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; opacity: 0.7; }
+.world-icon { font-size: 38px; margin-bottom: 14px; display: block; }
+.world-name {
+  font-size: 21px; font-weight: 700; margin-bottom: 10px;
+  background: linear-gradient(135deg, #fff 0%, var(--gold-light) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.world-topic-tag {
+  display: inline-block;
+  background: rgba(212,160,23,0.08); border: 1px solid rgba(212,160,23,0.18);
+  color: var(--gold); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 6px; margin-bottom: 14px;
+}
+.world-desc { font-size: 13px; color: #c4a870; line-height: 1.65; margin-bottom: 20px; }
+.world-card-footer {
+  border-top: 1px solid rgba(212,160,23,0.07); padding: 14px 28px;
+  display: flex; align-items: center; justify-content: space-between; font-size: 12px;
+}
+.world-status-done { color: var(--success); font-weight: 700; }
+.world-status-available { color: var(--gold); font-weight: 700; transition: letter-spacing 0.2s; }
+.world-card:hover .world-status-available { letter-spacing: 0.04em; }
+.world-challenges-count { font-size: 11px; color: var(--text-muted); }
+
+#screen-briefing {
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(212,140,23,0.07) 0%, transparent 60%), var(--bg);
+  align-items: center; justify-content: center; padding: 40px 20px;
+}
+.briefing-card {
+  background: rgba(10,7,2,0.98); border: 1px solid rgba(212,160,23,0.16);
+  border-radius: 24px; padding: 48px; max-width: 680px; width: 100%;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(212,160,23,0.05);
+  position: relative; overflow: hidden;
+}
+.briefing-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,160,23,0.5), transparent);
+}
+.npc-header {
+  display: flex; align-items: center; gap: 18px;
+  margin-bottom: 32px; padding-bottom: 28px;
+  border-bottom: 1px solid rgba(212,160,23,0.1);
+}
+.npc-big-avatar {
+  width: 60px; height: 60px;
+  background: linear-gradient(135deg, #b8860b, #f0c040);
+  border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-size: 28px; flex-shrink: 0;
+  box-shadow: 0 0 24px rgba(212,140,23,0.4), 0 0 0 2px rgba(212,160,23,0.2);
+}
+.npc-info h3 { font-size: 19px; color: var(--gold-light); margin-bottom: 4px; }
+.npc-info p { font-size: 12px; color: var(--text-muted); }
+.npc-status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--success); box-shadow: 0 0 8px var(--success);
+  margin-left: auto; flex-shrink: 0; animation: blink 2s ease infinite;
+}
+.briefing-world-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(212,160,23,0.12); border: 1px solid rgba(212,160,23,0.28);
+  color: var(--gold-light); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 6px 14px; border-radius: 8px; margin-bottom: 16px;
+}
+.briefing-card h2 {
+  font-size: 30px; margin-bottom: 20px;
+  background: linear-gradient(135deg, #fff, var(--gold-light));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.briefing-dialogue {
+  background: rgba(212,160,23,0.04); border-left: 3px solid var(--gold);
+  padding: 22px 28px; border-radius: 0 14px 14px 0;
+  font-size: 15px; line-height: 1.75; margin-bottom: 32px; color: #dfc9a0;
+  position: relative;
+}
+.briefing-dialogue::before {
+  content: '"'; position: absolute; top: 8px; left: 10px;
+  font-size: 48px; color: rgba(212,160,23,0.12); font-family: Georgia, serif; line-height: 1;
+}
+.briefing-info {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 32px;
+}
+.info-box {
+  background: rgba(212,160,23,0.05); border-radius: 14px; padding: 18px 14px;
+  text-align: center; border: 1px solid rgba(212,160,23,0.12); transition: all 0.2s;
+}
+.info-box:hover { border-color: rgba(212,160,23,0.3); }
+.info-box .val { font-size: 28px; font-weight: 800; color: var(--gold); font-family: 'Oxanium', sans-serif; text-shadow: 0 0 16px rgba(212,160,23,0.3); }
+.info-box .lbl { font-size: 11px; color: var(--text-muted); margin-top: 5px; letter-spacing: 0.08em; }
+
+#screen-game { background: var(--bg); }
+.game-layout { display: grid; grid-template-columns: 265px 1fr; min-height: calc(100vh - 52px); }
+.game-sidebar {
+  background: rgba(5,4,1,0.97); border-right: 1px solid rgba(212,160,23,0.08);
+  padding: 28px 20px; display: flex; flex-direction: column; gap: 22px;
+  box-shadow: 4px 0 20px rgba(0,0,0,0.4);
+}
+.sidebar-section h4 {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+}
+.sidebar-section h4::after { content: ''; flex: 1; height: 1px; background: rgba(212,160,23,0.08); }
+.score-big {
+  font-size: 48px; font-weight: 800; color: var(--gold);
+  font-family: 'Oxanium', sans-serif; text-shadow: 0 0 24px rgba(212,160,23,0.4); line-height: 1;
+}
+.score-big-sub { font-size: 11px; opacity: 0.35; margin-top: 4px; letter-spacing: 0.1em; }
+.progress-bar-wrap {
+  background: rgba(255,255,255,0.05); border-radius: 8px; height: 7px;
+  overflow: hidden; margin-top: 12px;
+}
+.progress-bar-fill {
+  height: 100%; background: linear-gradient(90deg, #b8860b, #f0c040);
+  border-radius: 8px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 0 10px rgba(212,160,23,0.4);
+}
+.results-row { display: flex; gap: 10px; }
+.result-box {
+  flex: 1; background: rgba(255,255,255,0.02);
+  border-radius: 12px; padding: 14px 10px; text-align: center;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.result-box.correct-box { border-color: rgba(77,255,124,0.14); background: rgba(77,255,124,0.03); }
+.result-box.wrong-box { border-color: rgba(255,77,77,0.14); background: rgba(255,77,77,0.03); }
+.result-num { font-size: 30px; font-weight: 800; font-family: 'Oxanium', sans-serif; line-height: 1; }
+.correct-box .result-num { color: var(--success); text-shadow: 0 0 12px rgba(77,255,124,0.3); }
+.wrong-box .result-num { color: var(--error); text-shadow: 0 0 12px rgba(255,77,77,0.3); }
+.result-label { font-size: 10px; opacity: 0.4; margin-top: 4px; letter-spacing: 0.08em; }
+.npc-sidebar {
+  background: rgba(212,160,23,0.04); border-radius: 14px; padding: 16px;
+  border: 1px solid rgba(212,160,23,0.1);
+}
+.npc-sidebar .npc-name { font-size: 12px; font-weight: 700; color: var(--gold); margin-bottom: 10px; }
+.npc-sidebar p { font-size: 12px; line-height: 1.65; color: var(--text-muted); }
+.hint-btn {
+  width: 100%; padding: 12px; background: rgba(212,160,23,0.07);
+  border: 1px solid rgba(212,160,23,0.2); color: var(--gold); border-radius: 10px;
+  font-family: 'Oxanium', sans-serif; font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; margin-top: 10px; letter-spacing: 0.04em;
+}
+.hint-btn:hover:not(:disabled) { background: rgba(212,160,23,0.14); transform: translateY(-1px); }
+.hint-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+.quit-btn {
+  width: 100%; padding: 12px; background: rgba(255,77,77,0.05);
+  border: 1px solid rgba(255,77,77,0.15); color: #ff6b6b; border-radius: 10px;
+  font-family: 'Oxanium', sans-serif; font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; letter-spacing: 0.04em;
+}
+.quit-btn:hover { background: rgba(255,77,77,0.12); transform: translateY(-1px); }
+.game-main {
+  padding: 36px 42px; display: flex; flex-direction: column; gap: 20px;
+  overflow-y: auto;
+  background-image: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(212,140,23,0.03) 0%, transparent 60%);
+}
+.card-header { display: flex; align-items: center; justify-content: space-between; }
+.card-header h3 { font-size: 14px; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.timer-display {
+  font-family: 'Oxanium', sans-serif; font-size: 26px; font-weight: 800;
+  color: var(--gold); background: rgba(212,160,23,0.06);
+  border: 1px solid rgba(212,160,23,0.18); border-radius: 12px;
+  padding: 8px 20px; min-width: 76px; text-align: center; transition: all 0.3s;
+  text-shadow: 0 0 12px rgba(212,160,23,0.4);
+}
+.timer-display.urgent {
+  color: var(--error); border-color: rgba(255,77,77,0.4); background: rgba(255,77,77,0.06);
+  text-shadow: 0 0 12px rgba(255,77,77,0.5); animation: pulse 0.6s infinite alternate;
+}
+@keyframes pulse { from{opacity:1} to{opacity:0.5} }
+
+.scenario-box {
+  background: rgba(212,160,23,0.04); border: 1px solid rgba(212,160,23,0.1);
+  border-radius: 16px; padding: 20px 26px; position: relative; overflow: hidden;
+}
+.scenario-box::before {
+  content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+  background: linear-gradient(180deg, #b8860b, #f0c040);
+}
+.scenario-label { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; opacity: 0.8; }
+.scenario-box p { font-size: 14px; line-height: 1.7; color: #c4a870; }
+
+/* WORLD 1 CONVEYOR */
+.conveyor-card {
+  background: var(--card-bg); border: 1px solid rgba(212,160,23,0.15);
+  border-radius: 20px; padding: 32px 36px;
+  position: relative; overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  animation: slideIn 0.4s ease;
+}
+@keyframes slideIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+.conveyor-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,160,23,0.35), transparent);
+}
+.conveyor-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(212,160,23,0.1); border: 1px solid rgba(212,160,23,0.22);
+  font-size: 13px; font-weight: 700; color: var(--gold);
+  font-family: 'Oxanium', sans-serif; margin-bottom: 18px;
+}
+.conveyor-text { font-size: 18px; line-height: 1.65; color: var(--text); margin-bottom: 16px; font-style: italic; }
+.conveyor-source { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+.conveyor-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 24px; }
+.accept-btn {
+  padding: 18px; border-radius: 14px; border: 1px solid rgba(77,255,124,0.25);
+  background: rgba(77,255,124,0.05); color: var(--success);
+  font-family: 'Oxanium', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all 0.25s; text-align: center;
+}
+.accept-btn:hover:not(:disabled) { background: rgba(77,255,124,0.12); border-color: rgba(77,255,124,0.5); transform: translateY(-3px); }
+.reject-btn {
+  padding: 18px; border-radius: 14px; border: 1px solid rgba(255,77,77,0.25);
+  background: rgba(255,77,77,0.05); color: var(--error);
+  font-family: 'Oxanium', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all 0.25s; text-align: center;
+}
+.reject-btn:hover:not(:disabled) { background: rgba(255,77,77,0.12); border-color: rgba(255,77,77,0.5); transform: translateY(-3px); }
+.accept-btn:disabled, .reject-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+.accept-btn.selected { background: rgba(77,255,124,0.18); border-color: rgba(77,255,124,0.6); }
+.reject-btn.selected { background: rgba(255,77,77,0.18); border-color: rgba(255,77,77,0.6); }
+
+/* DRAG AND DROP CLASSIFICATION */
+.drag-classify-section {
+  margin-top: 20px; padding-top: 20px;
+  border-top: 1px solid rgba(212,160,23,0.1);
+  display: none; animation: slideIn 0.3s ease;
+}
+.drag-classify-section.visible { display: block; }
+.drag-classify-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 14px; opacity: 0.8;
+}
+.drag-cards-row {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.drag-type-card {
+  padding: 12px 18px; border-radius: 10px;
+  border: 1px solid rgba(212,160,23,0.3);
+  background: rgba(212,160,23,0.08);
+  color: var(--gold-light); font-family: 'Oxanium', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: grab;
+  transition: all 0.2s; user-select: none;
+}
+.drag-type-card:hover { background: rgba(212,160,23,0.16); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(212,160,23,0.15); }
+.drag-type-card:active { cursor: grabbing; transform: scale(0.96); }
+.drag-type-card.dragging { opacity: 0.4; }
+
+.drop-zone {
+  border: 2px dashed rgba(212,160,23,0.3);
+  border-radius: 14px; padding: 20px;
+  text-align: center; background: rgba(212,160,23,0.03);
+  color: var(--text-muted); font-size: 14px; min-height: 70px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.25s; margin-bottom: 16px;
+}
+.drop-zone.drag-over {
+  border-color: var(--gold); background: rgba(212,160,23,0.08);
+  box-shadow: 0 0 20px rgba(212,160,23,0.15);
+}
+.drop-zone.has-value {
+  border-color: var(--gold); background: rgba(212,160,23,0.1);
+  color: var(--gold); font-family: 'Oxanium', sans-serif;
+  font-size: 18px; font-weight: 700;
+  text-shadow: 0 0 12px rgba(212,160,23,0.4);
+}
+
+.w1-progress { display: flex; gap: 6px; margin-top: 12px; }
+.w1-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(212,160,23,0.2); border: 1px solid rgba(212,160,23,0.3);
+  transition: all 0.3s;
+}
+.w1-dot.done { background: var(--gold); box-shadow: 0 0 6px rgba(212,160,23,0.4); }
+.w1-dot.current { background: rgba(212,160,23,0.5); animation: blink 1s ease infinite; }
+
+/* PERSONA */
+.persona-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; margin-bottom: 16px; }
+.persona-card {
+  background: rgba(212,160,23,0.04); border: 1px solid rgba(212,160,23,0.1);
+  border-radius: 14px; padding: 16px; transition: all 0.2s;
+}
+.persona-card:hover { border-color: rgba(212,160,23,0.22); }
+.persona-card .persona-name { font-size: 14px; font-weight: 700; color: var(--gold-light); margin-bottom: 4px; }
+.persona-card .persona-role { font-size: 12px; color: var(--text-muted); }
+.req-statement-box {
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(212,160,23,0.14);
+  border-radius: 16px; padding: 24px 28px; margin-bottom: 16px; position: relative;
+}
+.req-statement-box::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,160,23,0.28), transparent);
+}
+.req-statement-box p { font-size: 17px; line-height: 1.65; color: var(--text); }
+.persona-options { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+.persona-btn {
+  padding: 16px 10px; border-radius: 12px; border: 1px solid rgba(212,160,23,0.18);
+  background: rgba(212,160,23,0.04); color: var(--text); font-family: 'Oxanium', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center;
+}
+.persona-btn:hover:not(:disabled) { border-color: rgba(212,160,23,0.5); background: rgba(212,160,23,0.1); transform: translateY(-3px); }
+.persona-btn.correct { border-color: rgba(77,255,124,0.5); background: var(--success-dim); color: var(--success); }
+.persona-btn.wrong { border-color: rgba(255,77,77,0.5); background: var(--error-dim); color: var(--error); }
+.persona-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* PROBLEM */
+.problem-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.problem-btn {
+  padding: 18px 16px; border-radius: 14px; border: 1px solid rgba(212,160,23,0.16);
+  background: rgba(212,160,23,0.04); color: var(--text); font-family: 'Oxanium', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.25s; text-align: center;
+}
+.problem-btn:hover:not(:disabled) { border-color: rgba(212,160,23,0.5); background: rgba(212,160,23,0.1); transform: translateY(-3px); }
+.problem-btn.correct { border-color: rgba(77,255,124,0.5); background: var(--success-dim); color: var(--success); }
+.problem-btn.wrong { border-color: rgba(255,77,77,0.5); background: var(--error-dim); color: var(--error); }
+.problem-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* BLANK */
+.blank-options { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+.blank-btn {
+  padding: 20px 12px; border-radius: 14px; border: 1px solid rgba(212,160,23,0.16);
+  background: rgba(212,160,23,0.04); color: var(--text); font-family: 'Oxanium', sans-serif;
+  font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.25s; text-align: center;
+}
+.blank-btn:hover:not(:disabled) { border-color: rgba(212,160,23,0.5); background: rgba(212,160,23,0.1); transform: translateY(-4px); }
+.blank-btn.correct { border-color: rgba(77,255,124,0.5); background: var(--success-dim); color: var(--success); }
+.blank-btn.wrong { border-color: rgba(255,77,77,0.5); background: var(--error-dim); color: var(--error); }
+.blank-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* TF */
+.tf-options { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.tf-btn {
+  padding: 28px 20px; border-radius: 16px; border: 1px solid rgba(212,160,23,0.16);
+  background: rgba(212,160,23,0.04); color: var(--text); font-family: 'Oxanium', sans-serif;
+  font-size: 17px; font-weight: 800; cursor: pointer; transition: all 0.25s; text-align: center;
+}
+.tf-btn:hover:not(:disabled) { border-color: rgba(212,160,23,0.5); background: rgba(212,160,23,0.1); transform: translateY(-4px); }
+.tf-btn.correct { border-color: rgba(77,255,124,0.5); background: var(--success-dim); color: var(--success); }
+.tf-btn.wrong { border-color: rgba(255,77,77,0.5); background: var(--error-dim); color: var(--error); }
+.tf-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* HINT */
+.hint-box {
+  background: rgba(212,160,23,0.06); border: 1px solid rgba(212,160,23,0.22);
+  border-radius: 14px; padding: 14px 20px;
+  font-size: 14px; line-height: 1.65; color: #e8c87a; display: none;
+  animation: slideIn 0.3s ease;
+}
+.hint-box.visible { display: block; }
+
+/* FEEDBACK */
+.feedback-overlay {
+  position: fixed; top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center; z-index: 100;
+}
+.feedback-overlay.visible { display: flex; }
+.feedback-card {
+  background: linear-gradient(160deg, #0e0900, #060400);
+  border-radius: 24px; padding: 48px 44px;
+  max-width: 500px; width: 90%; text-align: center;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(212,160,23,0.08);
+  animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative; overflow: hidden;
+}
+.feedback-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; }
+.feedback-card.correct::before { background: linear-gradient(90deg,transparent,rgba(77,255,124,0.6),transparent); }
+.feedback-card.wrong::before { background: linear-gradient(90deg,transparent,rgba(255,77,77,0.6),transparent); }
+@keyframes popIn { from{transform:scale(0.8) translateY(20px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+.feedback-icon { font-size: 60px; margin-bottom: 18px; display: block; }
+.feedback-card h3 { font-size: 28px; margin-bottom: 10px; }
+.feedback-card.correct h3 { color: var(--success); text-shadow: 0 0 20px rgba(77,255,124,0.4); }
+.feedback-card.wrong h3 { color: var(--error); text-shadow: 0 0 20px rgba(255,77,77,0.4); }
+.feedback-card p { font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 24px; }
+.feedback-points { font-family: 'Oxanium', sans-serif; font-size: 38px; font-weight: 800; margin-bottom: 28px; }
+.feedback-card.correct .feedback-points { color: var(--success); }
+.feedback-card.wrong .feedback-points { color: var(--error); }
+
+/* QUIT */
+.quit-overlay {
+  position: fixed; top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.88); backdrop-filter: blur(6px);
+  display: none; align-items: center; justify-content: center; z-index: 200;
+}
+.quit-overlay.visible { display: flex; }
+.quit-card {
+  background: linear-gradient(160deg, #0e0900, #060400);
+  border-radius: 24px; padding: 48px; max-width: 440px; width: 90%; text-align: center;
+  border: 1px solid rgba(255,77,77,0.18);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.8); animation: popIn 0.3s ease;
+}
+.quit-card h3 { font-size: 24px; margin-bottom: 14px; color: var(--gold); }
+.quit-card p { font-size: 14px; color: var(--text-muted); margin-bottom: 32px; line-height: 1.65; }
+.btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* WORLD COMPLETE */
+#screen-worldcomplete {
+  background:
+    radial-gradient(ellipse 100% 60% at 50% 0%, rgba(212,140,23,0.16) 0%, transparent 60%),
+    #060400;
+  align-items: center; justify-content: center; padding: 40px 20px; text-align: center;
+}
+.worldcomplete-inner {
+  display: flex; flex-direction: column; align-items: center;
+  max-width: 660px; margin: 0 auto; padding: 40px 20px;
+}
+.complete-badge-icon {
+  font-size: 90px; margin-bottom: 24px;
+  animation: floatBounce 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px rgba(212,160,23,0.4));
+}
+@keyframes floatBounce { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-18px) scale(1.05)} }
+.complete-world-title {
+  font-size: 40px; font-weight: 800; margin-bottom: 10px;
+  background: linear-gradient(135deg, #fff 0%, var(--gold) 60%, #f0c040 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.complete-world-sub { font-size: 14px; opacity: 0.45; margin-bottom: 36px; letter-spacing: 0.1em; text-transform: uppercase; }
+.complete-divider { width: 200px; height: 1px; margin: 0 auto 36px; background: linear-gradient(90deg,transparent,var(--gold),transparent); opacity: 0.35; }
+.complete-stats { display: flex; gap: 16px; justify-content: center; margin-bottom: 36px; flex-wrap: wrap; }
+.stat-box {
+  background: rgba(212,160,23,0.07); border: 1px solid rgba(212,160,23,0.16);
+  border-radius: 18px; padding: 24px 32px; min-width: 130px; position: relative; overflow: hidden;
+}
+.stat-box::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: linear-gradient(90deg,#b8860b,#f0c040); }
+.stat-box .sv { font-size: 42px; font-weight: 800; color: var(--gold); font-family: 'Oxanium', sans-serif; text-shadow: 0 0 20px rgba(212,160,23,0.4); line-height: 1; }
+.stat-box .sl { font-size: 11px; opacity: 0.4; margin-top: 6px; letter-spacing: 0.1em; text-transform: uppercase; }
+.badge-earned {
+  background: rgba(212,160,23,0.07); border: 2px solid rgba(212,160,23,0.28);
+  border-radius: 20px; padding: 24px 40px; margin-bottom: 32px; display: inline-block;
+  box-shadow: 0 0 40px rgba(212,160,23,0.08); position: relative;
+}
+.badge-earned::before { content:''; position:absolute; top:0; left:24px; right:24px; height:1px; background: linear-gradient(90deg,transparent,rgba(212,160,23,0.5),transparent); }
+.badge-earned .badge-name { font-size: 22px; font-weight: 700; color: var(--gold-light); text-shadow: 0 0 16px rgba(212,160,23,0.3); }
+.badge-earned .badge-sub { font-size: 12px; opacity: 0.5; margin-top: 6px; }
+.npc-complete-msg {
+  background: rgba(212,160,23,0.05); border-left: 3px solid var(--gold);
+  border-radius: 0 16px 16px 0; padding: 18px 24px;
+  max-width: 540px; text-align: left; margin: 0 auto 36px;
+  font-size: 14px; line-height: 1.7; color: #dfc9a0;
+}
+
+/* FINAL */
+#screen-final {
+  background:
+    radial-gradient(ellipse 100% 60% at 50% 0%, rgba(212,140,23,0.18) 0%, transparent 55%),
+    #060400;
+  align-items: center; justify-content: center; padding: 40px 20px;
+}
+.final-card {
+  background: rgba(10,7,2,0.98); border-radius: 28px; padding: 56px 52px;
+  max-width: 740px; width: 100%;
+  box-shadow: 0 32px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(212,160,23,0.1);
+  text-align: center; position: relative; overflow: hidden;
+}
+.final-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: linear-gradient(90deg,transparent,#b8860b,#f0c040,#b8860b,transparent); }
+.final-trophy { font-size: 72px; margin-bottom: 20px; filter: drop-shadow(0 0 24px rgba(212,160,23,0.5)); animation: floatBounce 3s ease-in-out infinite; }
+.final-card h2 {
+  font-size: 38px; margin-bottom: 10px;
+  background: linear-gradient(135deg, #fff 0%, var(--gold) 60%, #f0c040 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.final-sub { color: var(--text-muted); margin-bottom: 36px; font-size: 16px; }
+.final-score-big { font-size: 84px; font-weight: 800; color: var(--gold); font-family: 'Oxanium', sans-serif; text-shadow: 0 0 40px rgba(212,160,23,0.5); line-height: 1; margin-bottom: 8px; }
+.final-score-label { font-size: 12px; color: var(--text-muted); margin-bottom: 36px; letter-spacing: 0.12em; text-transform: uppercase; }
+.final-divider { width:100%; height:1px; margin-bottom:28px; background: linear-gradient(90deg,transparent,rgba(212,160,23,0.18),transparent); }
+.badges-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); gap: 12px; margin-bottom: 32px; }
+.badge-item { background: rgba(255,255,255,0.02); border: 1px solid rgba(212,160,23,0.1); border-radius: 16px; padding: 18px 12px; text-align: center; transition: all 0.2s; }
+.badge-item:hover { border-color: rgba(212,160,23,0.25); background: rgba(212,160,23,0.05); }
+.badge-item .bi { font-size: 30px; margin-bottom: 10px; display: block; }
+.badge-item .bn { font-size: 11px; font-weight: 700; color: var(--gold-light); }
+.badge-item .bs { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.final-npc { background: rgba(212,160,23,0.05); border-left: 3px solid var(--gold); border-radius: 0 16px 16px 0; padding: 18px 24px; text-align: left; font-size: 14px; line-height: 1.75; margin-bottom: 32px; color: #dfc9a0; }
+
+@media (max-width:900px) {
+  .worlds-grid { padding: 24px; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); }
+  .worlds-hero { padding: 28px 24px 22px; }
+  .game-layout { grid-template-columns: 1fr; }
+  .game-sidebar { flex-direction: row; flex-wrap: wrap; padding: 16px; gap: 16px; }
+  .game-main { padding: 22px; }
+}
+@media (max-width:640px) {
+  .persona-options { grid-template-columns: repeat(2,1fr); }
+  .blank-options { grid-template-columns: repeat(2,1fr); }
+  .briefing-card { padding: 28px 22px; }
+  .final-card { padding: 36px 24px; }
+  .drag-cards-row { gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<div id="screen-intro" class="screen active">
+  <div class="intro-inner">
+    <div class="intro-badge">Bureau of Lost Specifications — Field Operations</div>
+    <div class="intro-eyebrow">An Interactive Learning Experience</div>
+    <h1 class="intro-title">Req<span>Quest</span></h1>
+    <p class="intro-subtitle">The Requirements Archaeology Adventure</p>
+    <div class="intro-divider"></div>
+    <div class="story-box">
+      <div class="npc-label"><span class="npc-avatar-sm">🏛️</span> Director Calloway — Bureau of Lost Specifications</div>
+      <p>Ancient software systems from civilizations across time have been discovered — but their <strong>Requirements Specifications</strong> were never written down. Without them, these systems cannot be understood, preserved, or rebuilt.</p>
+      <br>
+      <p>You are a <strong>Requirements Archaeologist</strong> working for the Bureau of Lost Specifications. Travel through 5 historical eras, excavate lost stakeholder knowledge, analyse corrupted requirements, and <strong>document the specifications</strong> before they are forgotten forever.</p>
+    </div>
+    <div class="name-section">
+      <label for="player-name">Enter your archaeologist name</label>
+      <input type="text" id="player-name" placeholder="Your name..." maxlength="30" />
+    </div>
+    <button class="btn btn-primary" onclick="startGame()" style="font-size:17px;padding:17px 56px;">Begin Excavation ➜</button>
+    <p class="intro-hint">5 Eras · 30 Challenges · 1 Archive to complete</p>
+  </div>
+</div>
+
+<div id="screen-worlds" class="screen">
+  <div class="topbar">
+    <span class="logo">Req<span>Quest</span></span>
+    <div class="meta">
+      <span class="topbar-pill" id="topbar-player">Archaeologist: —</span>
+      <span class="score-display">⚡ <span id="topbar-score">0</span> pts</span>
+    </div>
+  </div>
+  <div class="worlds-hero">
+    <div class="worlds-hero-eyebrow">Bureau of Lost Specifications</div>
+    <h2>Field Operations Centre</h2>
+    <p>Choose an era to excavate. Complete all 6 challenges to earn your Archive Badge and document the lost specification.</p>
+    <div class="worlds-hero-stats">
+      <div class="hero-stat">🏛️ <strong>5</strong> Historical Eras</div>
+      <div class="hero-stat">⚡ <strong>30</strong> Total Challenges</div>
+      <div class="hero-stat">🏅 <strong>5</strong> Archive Badges</div>
+    </div>
+  </div>
+  <div class="worlds-grid" id="worlds-grid"></div>
+</div>
+
+<div id="screen-briefing" class="screen">
+  <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:40px 20px;">
+    <div class="briefing-card">
+      <div class="npc-header">
+        <div class="npc-big-avatar" id="briefing-npc-avatar">🏛️</div>
+        <div class="npc-info">
+          <h3 id="briefing-npc-name">NPC Name</h3>
+          <p id="briefing-npc-role">NPC Role</p>
+        </div>
+        <div class="npc-status-dot"></div>
+      </div>
+      <div class="briefing-world-tag" id="briefing-world-tag">▶ Era 1</div>
+      <h2 id="briefing-world-name">World Name</h2>
+      <div class="briefing-dialogue" id="briefing-dialogue">Loading...</div>
+      <div class="briefing-info">
+        <div class="info-box"><div class="val">6</div><div class="lbl">Challenges</div></div>
+        <div class="info-box"><div class="val">180s</div><div class="lbl">Per Challenge</div></div>
+        <div class="info-box"><div class="val">1</div><div class="lbl">Hint / Round</div></div>
+      </div>
+      <div style="display:flex;gap:12px;">
+        <button class="btn btn-secondary" style="flex:1" onclick="goToWorlds()">← Back</button>
+        <button class="btn btn-primary" style="flex:2" onclick="startWorld()">Enter Era ➜</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="screen-game" class="screen">
+  <div class="topbar">
+    <span class="logo">Req<span>Quest</span></span>
+    <div class="meta">
+      <span class="topbar-pill" id="game-topbar-world" style="color:var(--gold-light);border-color:rgba(212,160,23,0.28);">Era 1</span>
+      <span class="topbar-pill" id="game-topbar-player">Archaeologist: —</span>
+      <span class="score-display">⚡ <span id="game-score-display">0</span> pts</span>
+    </div>
+  </div>
+  <div class="game-layout">
+    <div class="game-sidebar">
+      <div class="sidebar-section">
+        <h4>Total Score</h4>
+        <div class="score-big" id="sidebar-score">0</div>
+        <div class="score-big-sub" id="sidebar-progress">CHALLENGE 1 OF 6</div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+      </div>
+      <div class="sidebar-section">
+        <h4>Results</h4>
+        <div class="results-row">
+          <div class="result-box correct-box"><div class="result-num" id="correct-count">0</div><div class="result-label">Correct</div></div>
+          <div class="result-box wrong-box"><div class="result-num" id="wrong-count">0</div><div class="result-label">Wrong</div></div>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <h4>Field NPC</h4>
+        <div class="npc-sidebar">
+          <div class="npc-name" id="game-npc-name-display">🏛️ Director Calloway</div>
+          <p id="game-npc-msg">Analyse each artefact carefully. The archive depends on your accuracy.</p>
+        </div>
+        <button class="hint-btn" id="hint-btn" onclick="useHint()">💡 Request Hint (1 available)</button>
+        <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:8px;display:none" id="hint-used-label">Hint used — score ÷ 2 this round</div>
+      </div>
+      <div style="margin-top:auto">
+        <button class="quit-btn" onclick="showQuitConfirm()">✕ Abandon Dig</button>
+      </div>
+    </div>
+    <div class="game-main" id="game-main-content"></div>
+  </div>
+</div>
+
+<div class="feedback-overlay" id="feedback-overlay">
+  <div class="feedback-card" id="feedback-card">
+    <span class="feedback-icon" id="feedback-icon">✅</span>
+    <h3 id="feedback-title">Correct!</h3>
+    <p id="feedback-msg">Well done.</p>
+    <div class="feedback-points" id="feedback-points">+10</div>
+    <button class="btn btn-primary" onclick="nextChallenge()" style="width:100%;font-size:16px;">Next Challenge ➜</button>
+  </div>
+</div>
+
+<div class="quit-overlay" id="quit-overlay">
+  <div class="quit-card">
+    <h3>⚠ Abandon Dig?</h3>
+    <p>Your progress in this era will be lost. Your total score will be saved. Return to Field Operations?</p>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="hideQuitConfirm()">Continue Dig</button>
+      <button class="btn btn-danger" onclick="confirmQuit()">Abandon</button>
+    </div>
+  </div>
+</div>
+
+<div id="screen-worldcomplete" class="screen">
+  <div class="worldcomplete-inner">
+    <div class="complete-badge-icon" id="complete-badge-icon">🏆</div>
+    <h2 class="complete-world-title" id="complete-world-name">Era Complete!</h2>
+    <p class="complete-world-sub" id="complete-world-sub">Era 1 excavated</p>
+    <div class="complete-divider"></div>
+    <div class="complete-stats">
+      <div class="stat-box"><div class="sv" id="stat-correct">0</div><div class="sl">Correct</div></div>
+      <div class="stat-box"><div class="sv" id="stat-wrong">0</div><div class="sl">Wrong</div></div>
+      <div class="stat-box"><div class="sv" id="stat-score">0</div><div class="sl">Points</div></div>
+    </div>
+    <div class="badge-earned">
+      <div class="badge-name" id="badge-name">⭐ Badge</div>
+      <div class="badge-sub">Archive Badge added to your field record</div>
+    </div>
+    <div class="npc-complete-msg" id="complete-npc-msg">Well done Archaeologist.</div>
+    <button class="btn btn-primary" onclick="goToWorlds()" style="font-size:16px;padding:16px 48px;">Return to Field Operations ➜</button>
+  </div>
+</div>
+
+<div id="screen-final" class="screen">
+  <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:40px 20px;">
+    <div class="final-card">
+      <div class="final-trophy">📜</div>
+      <h2>Archive Complete!</h2>
+      <p class="final-sub" id="final-greeting">The Bureau of Lost Specifications is restored.</p>
+      <div class="final-score-big" id="final-score-big">0</div>
+      <div class="final-score-label">Total Score — Master Requirements Archaeologist</div>
+      <div class="final-divider"></div>
+      <div class="badges-grid" id="badges-grid"></div>
+      <div class="final-npc">🏛️ <strong>Director Calloway:</strong> Outstanding fieldwork, Archaeologist. You have excavated and documented the Requirements Specifications of 5 lost civilizations. The Bureau archive is now complete. Future engineers will build upon your discoveries for generations.</div>
+      <button class="btn btn-primary" onclick="restartGame()" style="width:100%;font-size:16px;padding:16px;margin-top:8px;">↺ New Expedition</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const WORLDS = [
+  {
+    id:0, name:"The Roman Data Vaults", tag:"Era 1", icon:"🏛️",
+    topic:"Stakeholder Requirements",
+    desc:"Attend the Roman Census Council. Accept valid requirements and reject invalid statements from imperial stakeholders.",
+    badge:"🏛️ Imperial Archivist",
+    npcName:"Senator Marcus", npcRole:"Roman Census Authority", npcAvatar:"🏛️",
+    npcBriefing:"Welcome to the Roman Data Vaults, Archaeologist. Imperial stakeholders are presenting their needs for the ancient census system. Your task is to Accept each statement that represents a valid requirement and Reject those that are merely opinions. For valid requirements drag the correct type into the classification zone.",
+    npcComplete:"Excellent fieldwork. The Roman census requirements are documented. The first scroll of the archive is complete.",
+    mechanic:"conveyor",
+    hint:"A valid requirement must be specific and implementable. Opinions about appearance or vague preferences are NOT valid requirements.",
+    challenges:[
+      {text:'"The census system shall record the name, age and region of every Roman citizen."',source:"Senator Marcus — Census Authority",valid:true,type:"Functional"},
+      {text:'"The system should feel more Roman and less Greek in its design."',source:"Architect Lucius — Design Guild",valid:false},
+      {text:'"The system must process all census entries within 3 days of collection across all provinces."',source:"Governor Titus — Provincial Administration",valid:true,type:"Quality"},
+      {text:'"The system must comply with the Imperial Data Decree of 45 BC."',source:"Law Keeper Claudia — Imperial Legal Council",valid:true,type:"Constraint"},
+      {text:'"I think we should add some decorative columns to the interface."',source:"Designer Flavius — Imperial Arts",valid:false},
+      {text:'"Completing the census will allow the Empire to collect taxes more accurately and increase revenue."',source:"Imperial Treasurer — Treasury Council",valid:true,type:"Business"}
+    ]
+  },
+  {
+    id:1, name:"The Egyptian Blueprint Plains", tag:"Era 2", icon:"🪬",
+    topic:"User Personas & Needs",
+    desc:"Match each recovered Egyptian construction requirement to the correct ancient persona who would have expressed it.",
+    badge:"🪬 Persona Scribe",
+    npcName:"Scribe Neferu", npcRole:"Egyptian Documentation Lead", npcAvatar:"📜",
+    npcBriefing:"In the Egyptian Blueprint Plains we have recovered profiles of 4 key personas from the ancient construction project. Each requirement was expressed by one of them. Study their roles carefully and match each requirement to the correct persona.",
+    npcComplete:"Outstanding. All requirements matched to their persona sources. The Egyptian blueprint chapter is documented.",
+    mechanic:"persona",
+    hint:"Think about each persona's role. The architect handles construction calculations. The scribe manages records. The priest enforces sacred laws. The pharaoh sets strategic goals.",
+    personas:[
+      {label:"A",name:"Architect Imhotep",role:"45 — Chief Builder — designs pyramid construction systems"},
+      {label:"B",name:"Scribe Neferu",role:"30 — Record Keeper — manages all documentation"},
+      {label:"C",name:"High Priest Amenhotep",role:"60 — Religious Authority — enforces sacred law compliance"},
+      {label:"D",name:"Pharaoh Ramesses",role:"Supreme Ruler — strategic goals for the kingdom"}
+    ],
+    challenges:[
+      {text:'"The construction tracking system shall calculate the number of stone blocks needed per pyramid level."',answer:"A",hint:"Who calculates construction requirements — the chief architect."},
+      {text:'"The system must store all construction records on papyrus scrolls in the Great Library."',answer:"B",hint:"Record storage is a scribe responsibility."},
+      {text:'"The system must comply with the Sacred Construction Laws of the Temple of Amun."',answer:"C",hint:"Sacred law compliance is the High Priest responsibility."},
+      {text:'"Completing the pyramid on time will demonstrate the power of Egypt to all neighbouring kingdoms."',answer:"D",hint:"Strategic goals for the kingdom come from the Pharaoh."},
+      {text:'"The system shall allow architects to calculate load-bearing capacity of each pyramid layer."',answer:"A",hint:"Load-bearing calculations are an architect requirement."},
+      {text:'"The system must record every scroll transaction with the scribe seal and date of entry."',answer:"B",hint:"Recording transactions with seals is a scribe requirement."}
+    ]
+  },
+  {
+    id:2, name:"The Medieval Requirement Ruins", tag:"Era 3", icon:"🏰",
+    topic:"Requirement Quality",
+    desc:"Recover corrupted medieval guild requirements. Identify what is wrong with each one before it is lost forever.",
+    badge:"🏰 Guild Analyst",
+    npcName:"Guild Master Edmund", npcRole:"Medieval Requirements Analyst", npcAvatar:"⚔️",
+    npcBriefing:"These requirements were recovered from corrupted medieval guild records. Some are badly written — vague, not measurable, or missing a source. Identify the problem with each one before the knowledge is lost.",
+    npcComplete:"Impressive analysis. All corrupted requirements identified. The medieval guild chapter is restored.",
+    mechanic:"problem",
+    hint:"A good requirement must be specific, measurable, have a named source, and be implementable. Vague statements without criteria are the most common problem.",
+    challenges:[
+      {text:'"The guild management system should work well."',options:["Too vague","Not measurable","Missing source","Correct as written"],answer:"Too vague",explanation:"No specific criteria or functionality is defined — too vague to implement."},
+      {text:'"The system shall record all merchant transactions within 24 hours of completion as required by the Guild Master."',options:["Too vague","Not measurable","Missing source","Correct as written"],answer:"Correct as written",explanation:"Specific, measurable, has a timeframe and a named source."},
+      {text:'"The castle defence system must be very secure against enemy attacks."',options:["Too vague","Not measurable","Missing source","Correct as written"],answer:"Too vague",explanation:"No specific security measure or standard is defined."},
+      {text:'"The system must process tax records within 48 hours."',options:["Too vague","Not measurable","Missing source","Correct as written"],answer:"Missing source",explanation:"No stakeholder or authority is named as the source of this requirement."},
+      {text:'"Someone in the castle said the drawbridge system should open faster."',options:["Too vague","Not measurable","Missing source","Correct as written"],answer:"Too vague",explanation:"No specific stakeholder named, no measurable speed criteria, no clear requirement."},
+      {text:'"The guild system shall allow the Guild Master to approve or reject any merchant application within 3 working days."',options:["Too vague","Not measurable","Missing source","Correct as written"],answer:"Correct as written",explanation:"Complete, measurable, has a named actor and a defined timeframe."}
+    ]
+  },
+  {
+    id:3, name:"The Renaissance Mechanics Workshop", tag:"Era 4", icon:"⚙️",
+    topic:"UML Class Model",
+    desc:"Rebuild Leonardo da Vinci lost engineering class model by completing each UML statement with the correct term.",
+    badge:"⚙️ UML Craftsman",
+    npcName:"Leonardo da Vinci", npcRole:"Renaissance Engineering Lead", npcAvatar:"🎨",
+    npcBriefing:"The Renaissance engineering class model was lost. Each statement describes a core UML concept — classes, attributes, methods and associations. Select the correct term to complete each statement and restore the model.",
+    npcComplete:"The Renaissance class model is restored. The engineering chapter of the archive is complete.",
+    mechanic:"blank",
+    hint:"Think about UML core concepts — Class groups objects, Attribute holds data, Method defines behaviour, Association connects classes.",
+    challenges:[
+      {text:"In UML, a ___ describes a set of objects sharing the same attributes, methods and relationships.",options:["Method","Class","Association","Attribute"],answer:"Class",explanation:"A Class is a classifier that describes a set of objects sharing the same specifications — UML Specification v2.5.1."},
+      {text:"In a UML class model, an ___ is a typed feature of a class that describes a range of values instances may hold.",options:["Association","Method","Attribute","Subject"],answer:"Attribute",explanation:"An Attribute is a typed feature of a class that describes a range of values — UML Specification v2.5.1."},
+      {text:"In UML, a ___ is a specification of behaviour that can be executed by a class instance in response to a message.",options:["Attribute","Class","Association","Method"],answer:"Method",explanation:"A Method is a specification of behaviour executed by a class instance — UML Specification v2.5.1."},
+      {text:"A One-to-Many association in UML is written as ___.",options:["1:1","1:*","*:*","0..1"],answer:"1:*",explanation:"One-to-Many means one entity interacts with multiple other entities — written as 1:*."},
+      {text:"In game design, ___ are active class entities that interact with objects in the game world.",options:["Methods","Attributes","Subjects","Associations"],answer:"Subjects",explanation:"Subjects are active class entities — Player, NPC, OtherPlayer — that interact with objects."},
+      {text:"In UML, an ___ is a relationship between classes that indicates connections among their instances.",options:["Attribute","Method","Association","Object"],answer:"Association",explanation:"An Association is a relationship between classes indicating connections among instances — UML Specification v2.5.1."}
+    ]
+  },
+  {
+    id:4, name:"The Industrial Verification Vault", tag:"Era 5", icon:"🏭",
+    topic:"Verification & Validation",
+    desc:"Verify the final industrial era requirements before submitting the complete archive to the Bureau.",
+    badge:"🏭 Verification Engineer",
+    npcName:"Inspector Victoria", npcRole:"Industrial Verification Lead", npcAvatar:"🔍",
+    npcBriefing:"This is the final era, Archaeologist. Before we submit the complete archive to the Bureau, every requirement must be verified. Judge each one — is it properly written? Specific, measurable, complete and unambiguous? Answer True or False.",
+    npcComplete:"All requirements verified. The complete Requirements Archive is ready for submission to the Bureau of Lost Specifications.",
+    mechanic:"truefalse",
+    hint:"A properly written requirement must be specific, measurable, have a clear actor, and be unambiguous. If any of these are missing — it is False.",
+    challenges:[
+      {text:'"The steam engine control system should be easy for factory workers to operate."',answer:false,explanation:"Not measurable — no specific usability criteria or time is defined."},
+      {text:'"The factory automation system shall process all production orders within 2 hours of submission under normal operating load."',answer:true,explanation:"Specific, measurable, has actor, action, time and condition."},
+      {text:'"The system must comply with all relevant industrial laws and safety standards."',answer:false,explanation:"Too vague — no specific laws or standards are named."},
+      {text:'"The telegraph communication system shall transmit all messages within 30 seconds of sending across all connected stations."',answer:true,explanation:"Specific, measurable, has actor, action, time and scope."},
+      {text:'"The system must be improved and made better for workers."',answer:false,explanation:"Not measurable — no specific improvement criteria defined."},
+      {text:'"The railway scheduling system shall update all departure times within 5 minutes of any track change with zero scheduling conflicts."',answer:true,explanation:"Specific, measurable, has condition, timeframe and success criteria."}
+    ]
+  }
+];
+
+let state = {
+  playerName:'', score:0, currentWorld:null, currentChallenge:0,
+  worldCorrect:0, worldWrong:0, worldScore:0,
+  hintUsed:false, completedWorlds:[], timer:null, timeLeft:180, canAnswer:true
+};
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function startGame() {
+  const name = document.getElementById('player-name').value.trim();
+  if (!name) {
+    document.getElementById('player-name').style.borderColor='var(--error)';
+    document.getElementById('player-name').style.boxShadow='0 0 0 3px rgba(255,77,77,0.12)';
+    setTimeout(()=>{
+      document.getElementById('player-name').style.borderColor='';
+      document.getElementById('player-name').style.boxShadow='';
+    },1800);
+    return;
+  }
+  state.playerName=name;
+  updateTopbars();
+  buildWorldsGrid();
+  showScreen('screen-worlds');
+}
+
+function updateTopbars() {
+  document.getElementById('topbar-player').textContent='Archaeologist: '+state.playerName;
+  document.getElementById('topbar-score').textContent=state.score;
+  document.getElementById('game-topbar-player').textContent='Archaeologist: '+state.playerName;
+  document.getElementById('game-score-display').textContent=state.score;
+  document.getElementById('sidebar-score').textContent=state.score;
+}
+
+function buildWorldsGrid() {
+  const grid=document.getElementById('worlds-grid');
+  grid.innerHTML='';
+  WORLDS.forEach((w,i)=>{
+    const done=state.completedWorlds.includes(i);
+    const card=document.createElement('div');
+    card.className='world-card'+(done?' completed':'');
+    card.innerHTML=`
+      <div class="world-card-top"></div>
+      <div class="world-card-inner">
+        <div class="world-num">${w.tag}</div>
+        <span class="world-icon">${w.icon}</span>
+        <div class="world-name">${w.name}</div>
+        <div class="world-topic-tag">${w.topic}</div>
+        <div class="world-desc">${w.desc}</div>
+      </div>
+      <div class="world-card-footer">
+        <div class="${done?'world-status-done':'world-status-available'}">${done?'✅ Excavated':'▶ Begin Excavation →'}</div>
+        <div class="world-challenges-count">6 challenges</div>
+      </div>
+    `;
+    card.onclick=()=>enterWorld(i);
+    grid.appendChild(card);
+  });
+  if(state.completedWorlds.length===WORLDS.length) showFinal();
+}
+
+function goToWorlds() {
+  clearInterval(state.timer);
+  buildWorldsGrid();
+  updateTopbars();
+  showScreen('screen-worlds');
+}
+
+function enterWorld(worldIndex) {
+  state.currentWorld=worldIndex;
+  const w=WORLDS[worldIndex];
+  document.getElementById('briefing-npc-avatar').textContent=w.npcAvatar;
+  document.getElementById('briefing-npc-name').textContent=w.npcName;
+  document.getElementById('briefing-npc-role').textContent=w.npcRole;
+  document.getElementById('briefing-world-tag').textContent='▶ '+w.tag+' — '+w.topic;
+  document.getElementById('briefing-world-name').textContent=w.name;
+  document.getElementById('briefing-dialogue').textContent=w.npcBriefing;
+  showScreen('screen-briefing');
+}
+
+function startWorld() {
+  state.currentChallenge=0;
+  state.worldCorrect=0;
+  state.worldWrong=0;
+  state.worldScore=0;
+  state.hintUsed=false;
+  state.canAnswer=true;
+  const w=WORLDS[state.currentWorld];
+  document.getElementById('game-topbar-world').textContent=w.tag+' — '+w.name;
+  document.getElementById('game-npc-name-display').textContent=w.npcAvatar+' '+w.npcName;
+  document.getElementById('correct-count').textContent='0';
+  document.getElementById('wrong-count').textContent='0';
+  showScreen('screen-game');
+  loadChallenge();
+}
+
+function loadChallenge() {
+  const w=WORLDS[state.currentWorld];
+  state.hintUsed=false;
+  state.canAnswer=true;
+  document.getElementById('hint-btn').disabled=false;
+  document.getElementById('hint-btn').textContent='💡 Request Hint (1 available)';
+  document.getElementById('hint-used-label').style.display='none';
+  document.getElementById('game-npc-msg').textContent='Analyse each artefact carefully. The archive depends on your accuracy.';
+  const pct=(state.currentChallenge/w.challenges.length)*100;
+  document.getElementById('progress-fill').style.width=pct+'%';
+  document.getElementById('sidebar-progress').textContent='CHALLENGE '+(state.currentChallenge+1)+' OF '+w.challenges.length;
+  if(w.mechanic==='conveyor') loadConveyorChallenge();
+  else if(w.mechanic==='persona') loadPersonaChallenge();
+  else if(w.mechanic==='problem') loadProblemChallenge();
+  else if(w.mechanic==='blank') loadBlankChallenge();
+  else if(w.mechanic==='truefalse') loadTrueFalseChallenge();
+}
+
+/* WORLD 1 — CONVEYOR WITH DRAG AND DROP */
+let conveyorDecision = null;
+let draggedType = null;
+
+function loadConveyorChallenge() {
+  const w=WORLDS[state.currentWorld];
+  const challenge=w.challenges[state.currentChallenge];
+  const main=document.getElementById('game-main-content');
+  conveyorDecision=null;
+  draggedType=null;
+
+  const dotsHTML=w.challenges.map((_,i)=>`<div class="w1-dot ${i<state.currentChallenge?'done':i===state.currentChallenge?'current':''}"></div>`).join('');
+
+  main.innerHTML=`
+    <div class="card-header">
+      <h3>Challenge ${state.currentChallenge+1} — Imperial Requirement Review</h3>
+      <div class="timer-display" id="timer">180</div>
+    </div>
+    <div class="scenario-box">
+      <div class="scenario-label">🏛️ Roman Census Council — Statement Review</div>
+      <p>Review this imperial stakeholder statement. Accept it if it is a valid requirement and drag its type into the zone. Reject it if it is just an opinion.</p>
+    </div>
+    <div class="hint-box" id="hint-box"><strong>💡 Field Hint:</strong> <span id="hint-text"></span></div>
+    <div class="conveyor-card" id="conveyor-card">
+      <div class="conveyor-num">${state.currentChallenge+1}</div>
+      <div class="conveyor-text">${challenge.text}</div>
+      <div class="conveyor-source">👤 ${challenge.source}</div>
+      <div class="conveyor-actions">
+        <button class="accept-btn" id="accept-btn" onclick="conveyorAccept()">✅ Accept<br><span style="font-size:12px;opacity:0.65;font-weight:500">Valid Requirement</span></button>
+        <button class="reject-btn" id="reject-btn" onclick="conveyorReject()">❌ Reject<br><span style="font-size:12px;opacity:0.65;font-weight:500">Not a Requirement</span></button>
+      </div>
+      <div class="drag-classify-section" id="drag-classify-section">
+        <div class="drag-classify-label">Drag the correct requirement type into the zone below</div>
+        <div class="drag-cards-row">
+          <div class="drag-type-card" draggable="true" data-type="Functional" ondragstart="dragStart(event,'Functional')">Functional</div>
+          <div class="drag-type-card" draggable="true" data-type="Quality" ondragstart="dragStart(event,'Quality')">Quality</div>
+          <div class="drag-type-card" draggable="true" data-type="Business" ondragstart="dragStart(event,'Business')">Business</div>
+          <div class="drag-type-card" draggable="true" data-type="Constraint" ondragstart="dragStart(event,'Constraint')">Constraint</div>
+        </div>
+        <div class="drop-zone" id="drop-zone"
+          ondragover="dragOver(event)"
+          ondragleave="dragLeave(event)"
+          ondrop="dropType(event)">
+          Drop requirement type here
+        </div>
+        <div style="text-align:right;margin-top:8px;">
+          <button class="btn btn-primary" onclick="conveyorSubmit()" style="padding:12px 28px;">Submit ➜</button>
+        </div>
+      </div>
+    </div>
+    <div class="w1-progress">${dotsHTML}</div>
+  `;
+  startTimer();
+}
+
+function dragStart(event, type) {
+  draggedType = type;
+  event.dataTransfer.setData('text/plain', type);
+  event.target.classList.add('dragging');
+}
+
+function dragOver(event) {
+  event.preventDefault();
+  document.getElementById('drop-zone').classList.add('drag-over');
+}
+
+function dragLeave(event) {
+  document.getElementById('drop-zone').classList.remove('drag-over');
+}
+
+function dropType(event) {
+  event.preventDefault();
+  const type = event.dataTransfer.getData('text/plain');
+  draggedType = type;
+  const zone = document.getElementById('drop-zone');
+  zone.classList.remove('drag-over');
+  zone.classList.add('has-value');
+  zone.textContent = type;
+  document.querySelectorAll('.drag-type-card').forEach(c=>c.classList.remove('dragging'));
+}
+
+function conveyorAccept() {
+  if(!state.canAnswer) return;
+  conveyorDecision='accept';
+  document.getElementById('accept-btn').classList.add('selected');
+  document.getElementById('reject-btn').classList.remove('selected');
+  document.getElementById('drag-classify-section').classList.add('visible');
+}
+
+function conveyorReject() {
+  if(!state.canAnswer) return;
+  conveyorDecision='reject';
+  document.getElementById('reject-btn').classList.add('selected');
+  document.getElementById('accept-btn').classList.remove('selected');
+  document.getElementById('drag-classify-section').classList.remove('visible');
+  conveyorSubmit();
+}
+
+function conveyorSubmit() {
+  if(!state.canAnswer) return;
+  if(!conveyorDecision) return;
+  const w=WORLDS[state.currentWorld];
+  const challenge=w.challenges[state.currentChallenge];
+
+  if(conveyorDecision==='accept' && challenge.valid) {
+    if(!draggedType) {
+      const zone=document.getElementById('drop-zone');
+      if(zone) { zone.style.borderColor='var(--error)'; setTimeout(()=>zone.style.borderColor='',1500); }
+      return;
+    }
+    state.canAnswer=false;
+    clearInterval(state.timer);
+    const correct=draggedType===challenge.type;
+    recordResult(correct);
+    const msg=correct?'Correct classification. Well done, Archaeologist.':'Wrong type. The correct classification was: '+challenge.type;
+    showFeedback(correct,msg,false);
+  } else if(conveyorDecision==='reject' && !challenge.valid) {
+    state.canAnswer=false;
+    clearInterval(state.timer);
+    recordResult(true);
+    showFeedback(true,'Correct. That statement was an opinion — not a valid requirement.',false);
+  } else if(conveyorDecision==='accept' && !challenge.valid) {
+    state.canAnswer=false;
+    clearInterval(state.timer);
+    recordResult(false);
+    showFeedback(false,'Wrong. That statement was an opinion — not a valid requirement.',false);
+  } else if(conveyorDecision==='reject' && challenge.valid) {
+    state.canAnswer=false;
+    clearInterval(state.timer);
+    recordResult(false);
+    showFeedback(false,'Wrong. That was a valid requirement of type: '+challenge.type,false);
+  }
+}
+
+/* WORLD 2 — PERSONA */
+function loadPersonaChallenge() {
+  const w=WORLDS[state.currentWorld];
+  const challenge=w.challenges[state.currentChallenge];
+  const main=document.getElementById('game-main-content');
+  const personasHTML=w.personas.map(p=>`
+    <div class="persona-card">
+      <div class="persona-name">Persona ${p.label} — ${p.name}</div>
+      <div class="persona-role">${p.role}</div>
+    </div>
+  `).join('');
+  const optionsHTML=w.personas.map(p=>`
+    <button class="persona-btn" id="pbtn-${p.label}" onclick="classifyPersona('${p.label}')">
+      ${p.label}<br><span style="font-size:11px;opacity:0.65">${p.name}</span>
+    </button>
+  `).join('');
+  main.innerHTML=`
+    <div class="card-header">
+      <h3>Challenge ${state.currentChallenge+1} — Persona Match</h3>
+      <div class="timer-display" id="timer">180</div>
+    </div>
+    <div class="scenario-box">
+      <div class="scenario-label">👤 Egyptian Persona Profiles</div>
+      <p>Match the recovered requirement to the correct persona who would have expressed it.</p>
+    </div>
+    <div class="persona-grid">${personasHTML}</div>
+    <div class="hint-box" id="hint-box"><strong>💡 Field Hint:</strong> <span id="hint-text"></span></div>
+    <div class="req-statement-box"><p>${challenge.text}</p></div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Which persona expressed this requirement?</div>
+    <div class="persona-options">${optionsHTML}</div>
+  `;
+  startTimer();
+}
+
+function classifyPersona(label) {
+  if(!state.canAnswer) return;
+  state.canAnswer=false;
+  clearInterval(state.timer);
+  const w=WORLDS[state.currentWorld];
+  const challenge=w.challenges[state.currentChallenge];
+  const correct=label===challenge.answer;
+  w.personas.forEach(p=>{const btn=document.getElementById('pbtn-'+p.label);if(btn)btn.disabled=true;});
+  const selBtn=document.getElementById('pbtn-'+label);
+  if(selBtn) selBtn.className='persona-btn '+(correct?'correct':'wrong');
+  if(!correct){const corrBtn=document.getElementById('pbtn-'+challenge.answer);if(corrBtn)corrBtn.className='persona-btn correct';}
+  recordResult(correct);
+  showFeedback(correct,challenge.hint,false);
+}
+
+/* WORLD 3 — PROBLEM */
+function loadProblemChallenge() {
+  const w=WORLDS[state.currentWorld];
+  const challenge=w.challenges[state.currentChallenge];
+  const main=document.getElementById('game-main-content');
+  const optionsHTML=challenge.options.map(opt=>`
+    <button class="problem-btn" id="pbtn-${opt.replace(/\s+/g,'-')}" onclick="classifyProblem('${opt}')">${opt}</button>
+  `).join('');
+  main.innerHTML=`
+    <div class="card-header">
+      <h3>Challenge ${state.currentChallenge+1} — Spot the Problem</h3>
+      <div class="timer-display" id="timer">180</div>
+    </div>
+    <div class="scenario-box">
+      <div class="scenario-label">🏰 Corrupted Medieval Requirement</div>
+      <p>Identify what is wrong with this recovered requirement.</p>
+    </div>
+    <div class="req-statement-box"><p style="font-size:18px;">${challenge.text}</p></div>
+    <div class="hint-box" id="hint-box"><strong>💡 Field Hint:</strong> <span id="hint-text"></span></div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">What is wrong with this requirement?</div>
+    <div class="problem-options">${optionsHTML}</div>
+  `;
+  startTimer();
+}
+
+function classifyProblem(option) {
+  if(!state.canAnswer) return;
+  state.canAnswer=false;
+  clearInterval(state.timer);
+  const w=WORLDS[state.currentWorld];
+  const challenge=w.challenges[state.currentChallenge];
+  const correct=option===challenge.answer;
+  document.querySelectorAll('.problem-btn').forEach(b=>b.disabled=true);
+  const selBtn=document.getElementById('pbtn-'+option.replace(/\s+/g,'-'));
+  if(selBtn) selBtn.className='problem-btn '+(correct?'correct':'wrong');
+  if(!correct){const corrBtn=document.getElementById('pbtn-'+challenge.answer.replace(/\s+/g,'-'));if(corrBtn)corrBtn.className='problem-btn correct';}
+  recordResult(correct);
+  showFeedback(correct,challenge.explanation,false);
+}
+
+/* WORLD 4 — BLANK */
+function loadBlankChallenge() {
+  const w=WORLDS[state.currentWorld];
+  const challenge=w.challenges[state.currentChallenge];
+  const main=document.getElementById('game-main-content');
+  const highlighted=challenge.text.replace('___','<span style="color:var(--gold);font-weight:800;font-size:26px;text-shadow:0 0 12px rgba(212,160,23,0.4);">___</span>');
+  const optionsHTML=challenge.options.map(opt=>`
+    <button class="blank-btn" id="bbtn-${opt.replace(/[^a-zA-Z0-9]/g,'-')}" onclick="classifyBlank('${opt}')">${opt}</button>
+  `).join('');
+  main.innerHTML=`
+    <div class="card-header">
+      <h3>Challenge ${state.currentChallenge+1} — Complete the Statement</h3>
+      <div class="timer-display" id="timer">180</div>
+    </div>
+    <div class="scenario-box">
+      <div class="scenario-label">⚙️ Renaissance UML Model — Fill in the Blank</div>
+      <p>Complete the UML class model statement by selecting the correct missing term.</p>
+    </div>
+    <div class="req-statement-box">
+      <p style="font-size:18px;line-height:1.75;">${highlighted}</p>
+    </div>
+    <div class="hint-box" id="hint-box"><strong>💡 Field Hint:</strong> <span id="hint-text"></span></div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Select the correct term:</div>
+    <div class="blank-options">${optionsHTML}</div>
+  `;
+  startTimer();
+}
+
+function classifyBlank(option) {
+  if(!state.canAnswer) return;
+  state.canAnswer=false;
+  clearInterval(state.timer);
+  const w=WORLDS[state.currentWorld];
+  const challenge=w.challenges[state.currentChallenge];
+  const correct=option===challenge.answer;
+  document.querySelectorAll('.blank-btn').forEach(b=>b.disabled=true);
+  const selBtn=document.getElementById('bbtn-'+option.replace(/[^a-zA-Z0-9]/g,'-'));
+  if(selBtn) selBtn.className='blank-btn '+(correct?'correct':'wrong');
+  if(!correct){const corrBtn=document.getElementById('bbtn-'+challenge.answer.replace(/[^a-zA-Z0-9]/g,'-'));if(corrBtn)corrBtn.className='blank-btn correct';}
+  recordResult(correct);
+  showFeedback(correct,challenge.explanation,false);
+}
+
+/* WORLD 5 — TRUE FALSE */
+function loadTrueFalseChallenge() {
+  const w=WORLDS[state.currentWorld];
+  const challenge=w.challenges[state.currentChallenge];
+  const main=document.getElementById('game-main-content');
+  main.innerHTML=`
+    <div class="card-header">
+      <h3>Challenge ${state.currentChallenge+1} — Verify the Requirement</h3>
+      <div class="timer-display" id="timer">180</div>
+    </div>
+    <div class="scenario-box">
+      <div class="scenario-label">🏭 Industrial Verification</div>
+      <p>Is this requirement properly written — specific, measurable, complete and unambiguous?</p>
+    </div>
+    <div class="req-statement-box">
+      <p style="font-size:18px;line-height:1.75;">${challenge.text}</p>
+    </div>
+    <div class="hint-box" id="hint-box"><strong>💡 Field Hint:</strong> <span id="hint-text"></span></div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:18px;">Is this requirement correctly written?</div>
+    <div class="tf-options">
+      <button class="tf-btn" id="tf-true" onclick="classifyTF(true)">✅ True<br><span style="font-size:13px;font-weight:500;opacity:0.65">Correctly Written</span></button>
+      <button class="tf-btn" id="tf-false" onclick="classifyTF(false)">❌ False<br><span style="font-size:13px;font-weight:500;opacity:0.65">Has Problems</span></button>
+    </div>
+  `;
+  startTimer();
+}
+
+function classifyTF(value) {
+  if(!state.canAnswer) return;
+  state.canAnswer=false;
+  clearInterval(state.timer);
+  const w=WORLDS[state.currentWorld];
+  const challenge=w.challenges[state.currentChallenge];
+  const correct=value===challenge.answer;
+  document.getElementById('tf-true').disabled=true;
+  document.getElementById('tf-false').disabled=true;
+  document.getElementById('tf-'+(value?'true':'false')).className='tf-btn '+(correct?'correct':'wrong');
+  if(!correct) document.getElementById('tf-'+(challenge.answer?'true':'false')).className='tf-btn correct';
+  recordResult(correct);
+  showFeedback(correct,challenge.explanation,false);
+}
+
+/* SHARED */
+function recordResult(correct) {
+  if(correct){
+    const pts=state.hintUsed?5:10;
+    state.score+=pts; state.worldScore+=pts; state.worldCorrect++;
+    document.getElementById('correct-count').textContent=state.worldCorrect;
+  } else {
+    state.score=Math.max(0,state.score-2);
+    state.worldScore=Math.max(0,state.worldScore-2);
+    state.worldWrong++;
+    document.getElementById('wrong-count').textContent=state.worldWrong;
+  }
+  updateTopbars();
+}
+
+function showFeedback(correct,msg,timedOut) {
+  const fc=document.getElementById('feedback-card');
+  fc.className='feedback-card '+(correct?'correct':'wrong');
+  document.getElementById('feedback-icon').textContent=timedOut?'⏰':(correct?'✅':'❌');
+  document.getElementById('feedback-title').textContent=timedOut?'Time is up!':(correct?'Correct!':'Wrong!');
+  document.getElementById('feedback-msg').textContent=msg;
+  const pts=state.hintUsed?5:10;
+  document.getElementById('feedback-points').textContent=correct?'+'+pts+' pts':'-2 pts';
+  document.getElementById('feedback-overlay').classList.add('visible');
+}
+
+function nextChallenge() {
+  document.getElementById('feedback-overlay').classList.remove('visible');
+  conveyorDecision=null;
+  draggedType=null;
+  state.currentChallenge++;
+  const w=WORLDS[state.currentWorld];
+  if(state.currentChallenge>=w.challenges.length) showWorldComplete();
+  else loadChallenge();
+}
+
+function startTimer() {
+  clearInterval(state.timer);
+  state.timeLeft=180;
+  updateTimerDisplay();
+  state.timer=setInterval(()=>{
+    state.timeLeft--;
+    updateTimerDisplay();
+    if(state.timeLeft<=0){clearInterval(state.timer);timeOut();}
+  },1000);
+}
+
+function updateTimerDisplay() {
+  const el=document.getElementById('timer');
+  if(!el) return;
+  el.textContent=state.timeLeft;
+  el.className='timer-display'+(state.timeLeft<=20?' urgent':'');
+}
+
+function timeOut() {
+  if(!state.canAnswer) return;
+  state.canAnswer=false;
+  state.score=Math.max(0,state.score-2);
+  state.worldWrong++;
+  const wc=document.getElementById('wrong-count');
+  if(wc) wc.textContent=state.worldWrong;
+  updateTopbars();
+  showFeedback(false,'Time ran out. Move to the next challenge.',true);
+}
+
+function useHint() {
+  if(state.hintUsed||!state.canAnswer) return;
+  state.hintUsed=true;
+  const w=WORLDS[state.currentWorld];
+  const hintText=w.hint;
+  const hintTextEl=document.getElementById('hint-text');
+  const hintBox=document.getElementById('hint-box');
+  if(hintTextEl) hintTextEl.textContent=hintText;
+  if(hintBox) hintBox.classList.add('visible');
+  document.getElementById('hint-btn').disabled=true;
+  document.getElementById('hint-used-label').style.display='block';
+  document.getElementById('game-npc-msg').textContent=hintText;
+}
+
+function showQuitConfirm() {
+  clearInterval(state.timer);
+  document.getElementById('quit-overlay').classList.add('visible');
+}
+
+function hideQuitConfirm() {
+  document.getElementById('quit-overlay').classList.remove('visible');
+  startTimer();
+}
+
+function confirmQuit() {
+  clearInterval(state.timer);
+  document.getElementById('quit-overlay').classList.remove('visible');
+  document.getElementById('feedback-overlay').classList.remove('visible');
+  conveyorDecision=null;
+  draggedType=null;
+  goToWorlds();
+}
+
+function showWorldComplete() {
+  clearInterval(state.timer);
+  const w=WORLDS[state.currentWorld];
+  if(!state.completedWorlds.includes(state.currentWorld)) state.completedWorlds.push(state.currentWorld);
+  document.getElementById('complete-badge-icon').textContent=w.badge.split(' ')[0];
+  document.getElementById('complete-world-name').textContent=w.name+' — Excavated!';
+  document.getElementById('complete-world-sub').textContent=w.tag+' · '+w.topic;
+  document.getElementById('stat-correct').textContent=state.worldCorrect;
+  document.getElementById('stat-wrong').textContent=state.worldWrong;
+  document.getElementById('stat-score').textContent=state.worldScore;
+  document.getElementById('badge-name').textContent=w.badge;
+  document.getElementById('complete-npc-msg').innerHTML='<strong>'+w.npcAvatar+' '+w.npcName+':</strong> '+w.npcComplete;
+  showScreen('screen-worldcomplete');
+}
+
+function showFinal() {
+  document.getElementById('final-greeting').textContent='Outstanding fieldwork, '+state.playerName+'! The archive is complete.';
+  document.getElementById('final-score-big').textContent=state.score;
+  const bg=document.getElementById('badges-grid');
+  bg.innerHTML='';
+  WORLDS.forEach(w=>{
+    const done=state.completedWorlds.includes(w.id);
+    const item=document.createElement('div');
+    item.className='badge-item';
+    item.style.opacity=done?'1':'0.3';
+    item.innerHTML=`<span class="bi">${w.badge.split(' ')[0]}</span><div class="bn">${w.badge.split(' ').slice(1).join(' ')}</div><div class="bs">${done?'✅ Earned':'🔒 Not earned'}</div>`;
+    bg.appendChild(item);
+  });
+  showScreen('screen-final');
+}
+
+function restartGame() {
+  state={playerName:'',score:0,currentWorld:null,currentChallenge:0,worldCorrect:0,worldWrong:0,worldScore:0,hintUsed:false,completedWorlds:[],timer:null,timeLeft:180,canAnswer:true};
+  conveyorDecision=null;
+  draggedType=null;
+  document.getElementById('player-name').value='';
+  showScreen('screen-intro');
+}
+</script>
+</body>
+</html>
