@@ -1109,6 +1109,7 @@ function startWorld() {
   state.hintUsed=false;
   state.canAnswer=true;
   const w=WORLDS[state.currentWorld];
+  w.shuffledChallenges=[...w.challenges].sort(()=>Math.random()-0.5);
   document.getElementById('game-topbar-world').textContent=w.tag+' — '+w.name;
   document.getElementById('game-npc-name-display').textContent=w.npcAvatar+' '+w.npcName;
   document.getElementById('correct-count').textContent='0';
@@ -1141,7 +1142,7 @@ let draggedType = null;
 
 function loadConveyorChallenge() {
   const w=WORLDS[state.currentWorld];
-  const challenge=w.challenges[state.currentChallenge];
+  const challenge=(w.shuffledChallenges||w.challenges)[state.currentChallenge];
   const main=document.getElementById('game-main-content');
   conveyorDecision=null;
   draggedType=null;
@@ -1237,7 +1238,7 @@ function conveyorSubmit() {
   if(!state.canAnswer) return;
   if(!conveyorDecision) return;
   const w=WORLDS[state.currentWorld];
-  const challenge=w.challenges[state.currentChallenge];
+  const challenge=(w.shuffledChallenges||w.challenges)[state.currentChallenge];
 
   if(conveyorDecision==='accept' && challenge.valid) {
     if(!draggedType) {
@@ -1272,7 +1273,7 @@ function conveyorSubmit() {
 /* WORLD 2 — PERSONA */
 function loadPersonaChallenge() {
   const w=WORLDS[state.currentWorld];
-  const challenge=w.challenges[state.currentChallenge];
+  const challenge=(w.shuffledChallenges||w.challenges)[state.currentChallenge];
   const main=document.getElementById('game-main-content');
   const personasHTML=w.personas.map(p=>`
     <div class="persona-card">
@@ -1308,7 +1309,7 @@ function classifyPersona(label) {
   state.canAnswer=false;
   clearInterval(state.timer);
   const w=WORLDS[state.currentWorld];
-  const challenge=w.challenges[state.currentChallenge];
+  const challenge=(w.shuffledChallenges||w.challenges)[state.currentChallenge];
   const correct=label===challenge.answer;
   w.personas.forEach(p=>{const btn=document.getElementById('pbtn-'+p.label);if(btn)btn.disabled=true;});
   const selBtn=document.getElementById('pbtn-'+label);
@@ -1321,7 +1322,7 @@ function classifyPersona(label) {
 /* WORLD 3 — PROBLEM */
 function loadProblemChallenge() {
   const w=WORLDS[state.currentWorld];
-  const challenge=w.challenges[state.currentChallenge];
+  const challenge=(w.shuffledChallenges||w.challenges)[state.currentChallenge];
   const main=document.getElementById('game-main-content');
   const optionsHTML=challenge.options.map(opt=>`
     <button class="problem-btn" id="pbtn-${opt.replace(/\s+/g,'-')}" onclick="classifyProblem('${opt}')">${opt}</button>
@@ -1348,7 +1349,7 @@ function classifyProblem(option) {
   state.canAnswer=false;
   clearInterval(state.timer);
   const w=WORLDS[state.currentWorld];
-  const challenge=w.challenges[state.currentChallenge];
+  const challenge=(w.shuffledChallenges||w.challenges)[state.currentChallenge];
   const correct=option===challenge.answer;
   document.querySelectorAll('.problem-btn').forEach(b=>b.disabled=true);
   const selBtn=document.getElementById('pbtn-'+option.replace(/\s+/g,'-'));
@@ -1361,7 +1362,7 @@ function classifyProblem(option) {
 /* WORLD 4 — BLANK */
 function loadBlankChallenge() {
   const w=WORLDS[state.currentWorld];
-  const challenge=w.challenges[state.currentChallenge];
+  const challenge=(w.shuffledChallenges||w.challenges)[state.currentChallenge];
   const main=document.getElementById('game-main-content');
   const highlighted=challenge.text.replace('___','<span style="color:var(--gold);font-weight:800;font-size:26px;text-shadow:0 0 12px rgba(212,160,23,0.4);">___</span>');
   const optionsHTML=challenge.options.map(opt=>`
@@ -1391,7 +1392,7 @@ function classifyBlank(option) {
   state.canAnswer=false;
   clearInterval(state.timer);
   const w=WORLDS[state.currentWorld];
-  const challenge=w.challenges[state.currentChallenge];
+  const challenge=(w.shuffledChallenges||w.challenges)[state.currentChallenge];
   const correct=option===challenge.answer;
   document.querySelectorAll('.blank-btn').forEach(b=>b.disabled=true);
   const selBtn=document.getElementById('bbtn-'+option.replace(/[^a-zA-Z0-9]/g,'-'));
@@ -1404,7 +1405,7 @@ function classifyBlank(option) {
 /* WORLD 5 — TRUE FALSE */
 function loadTrueFalseChallenge() {
   const w=WORLDS[state.currentWorld];
-  const challenge=w.challenges[state.currentChallenge];
+  const challenge=(w.shuffledChallenges||w.challenges)[state.currentChallenge];
   const main=document.getElementById('game-main-content');
   main.innerHTML=`
     <div class="card-header">
@@ -1433,7 +1434,7 @@ function classifyTF(value) {
   state.canAnswer=false;
   clearInterval(state.timer);
   const w=WORLDS[state.currentWorld];
-  const challenge=w.challenges[state.currentChallenge];
+  const challenge=(w.shuffledChallenges||w.challenges)[state.currentChallenge];
   const correct=value===challenge.answer;
   document.getElementById('tf-true').disabled=true;
   document.getElementById('tf-false').disabled=true;
